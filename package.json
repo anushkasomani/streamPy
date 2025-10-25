@@ -14,10 +14,13 @@
     "react-dom": "19.1.0"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "@nomicfoundation/hardhat-verify": "^2.1.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "hardhat": "^3.0.9",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
