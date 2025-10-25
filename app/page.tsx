@@ -231,14 +231,16 @@ export default function AgentPlatform() {
           selectedAgent.walletAddress
         );
         
-        // If flowRate is not zero, a stream already exists
-        if (flowInfo.flowRate !== BigInt(0)) {
+        console.log('Flow info:', flowInfo);
+        
+        // Check if flowRate exists and is greater than 0
+        if (flowInfo && flowInfo.flowRate && flowInfo.flowRate > BigInt(0)) {
           setMessage('Error: A stream to this agent already exists! You may need to delete it first.');
           return;
         }
       } catch (error) {
         // Flow doesn't exist, which is fine
-        console.log('No existing flow found');
+        console.log('No existing flow found:', error);
       }
 
       // Check minimum balance requirement
@@ -308,6 +310,32 @@ export default function AgentPlatform() {
       fetchAgents();
     } catch (error) {
       console.error('Error updating reputation:', error);
+    }
+  };
+
+  const deleteStream = async () => {
+    if (!provider || !selectedAgent) {
+      setMessage('Please select an agent first.');
+      return;
+    }
+
+    const signer = await provider.getSigner();
+    const contract = new ethers.Contract(CFAv1ForwarderAddress, CFAv1ForwarderABI, signer);
+
+    try {
+      const tx = await contract.deleteFlow(
+        PYUSD_SUPER_TOKEN,
+        account,
+        selectedAgent.walletAddress,
+        "0x"
+      );
+      
+      await tx.wait();
+      setMessage('Stream deleted successfully!');
+      setActiveStream(null);
+    } catch (error: any) {
+      console.error('Error deleting stream:', error);
+      setMessage(`Failed to delete stream: ${error.reason || error.message}`);
     }
   };
 
@@ -467,11 +495,6 @@ export default function AgentPlatform() {
             ✅ Approve Token
           </button>
 
-          <div style={{ marginBottom: '10px', padding: '10px', backgroundColor: '#fef3c7', borderRadius: '8px', fontSize: '12px', color: '#78350f' }}>
-            <strong>Note:</strong> Current flow rate: {parseFloat(ethers.formatEther(flowRate)).toFixed(9)} PYUSD/sec
-            <br />
-            Try a smaller value like <code>1000000000</code> (1e9 wei) if you get errors.
-          </div>
 
           <button 
             onClick={startStreaming}
@@ -485,10 +508,29 @@ export default function AgentPlatform() {
               cursor: selectedAgent ? 'pointer' : 'not-allowed', 
               width: '100%',
               fontSize: '16px',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              marginBottom: '10px'
             }}
           >
             🌊 Start PYUSD Stream
+          </button>
+
+          <button 
+            onClick={deleteStream}
+            disabled={!selectedAgent}
+            style={{ 
+              backgroundColor: selectedAgent ? '#ef4444' : '#9ca3af', 
+              color: 'white', 
+              padding: '12px 20px', 
+              borderRadius: '8px', 
+              border: 'none', 
+              cursor: selectedAgent ? 'pointer' : 'not-allowed', 
+              width: '100%',
+              fontSize: '16px',
+              fontWeight: 'bold'
+            }}
+          >
+            🗑️ Delete Stream
           </button>
         </div>
       </div>
